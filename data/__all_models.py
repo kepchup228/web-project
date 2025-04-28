@@ -1,3 +1,3 @@
 from . import users
-from . import photos
-from . import tags
+from . import news
+from . import category

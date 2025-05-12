@@ -2,7 +2,7 @@ import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy_serializer import SerializerMixin
 from .db_session import SqlAlchemyBase
-
+# Таблица для связки фотографий и тегов
 association_table = sqlalchemy.Table('association', SqlAlchemyBase.metadata,
                                      sqlalchemy.Column('photo', sqlalchemy.Integer,
                                                        sqlalchemy.ForeignKey('photos.id')),

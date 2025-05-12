@@ -4,6 +4,7 @@ from datetime import datetime
 from .db_session import SqlAlchemyBase
 from .photo_tags import photo_tags
 
+
 class Photo(SqlAlchemyBase):
     __tablename__ = 'photos'
 
@@ -15,6 +16,6 @@ class Photo(SqlAlchemyBase):
     created_date = Column(DateTime, default=datetime.utcnow)
     is_private = Column(Boolean, default=False)
 
+    # Связь
     user = relationship("User")
-    comments = relationship("Comment", back_populates="photo", cascade="all, delete-orphan")
     tags = relationship("Tag", secondary=photo_tags, back_populates="photos")

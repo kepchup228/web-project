@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Помощь</h2>
+    <h4>Здесь вы можете найти информацию о том, как использовать фотогалерею</h4>
+    <h5>1.Как добавить фотографию?</h5>
+    <p>Для добавления фотографии нажмите на кнопку "Добавить фото" в верхнем меню</p>
+    <img src="{{ url_for('static', filename='images/how_add_photo.png') }}" alt="Добавление фотографии" class="img-fluid">
+    <h5>2.Как редактировать фотографию?</h5>
+    <p>Перейдите в раздел "Мои фотографии", выберите фотографию, которую хотите изменить, нажмите на кнопку "Изменить"</p>
+    <img src="{{ url_for('static', filename='images/how_redact_photo1.png') }}" alt="Редактирование фотографии" class="img-fluid">
+    <img src="{{ url_for('static', filename='images/how_redact_photo2.png') }}" alt="Редактирование фотографии" class="img-fluid">
+    <h5>3.Как удалить фотографию?</h5>
+    <p>Перейдите в раздел "Мои фотографии", выберите фотографию, которую хотите удалить, нажмите на кнопку "Удалить"</p>
+    <img src="{{ url_for('static', filename='images/how_redact_photo1.png') }}" alt="Удаление фотографии" class="img-fluid">
+    <img src="{{ url_for('static', filename='images/how_del_photo.png') }}" alt="Удаление фотографии" class="img-fluid">
+    <h5>4.Как пользоваться поиском?</h5>
+    <p>На главной странице нажмите на строку поиска, введите нужную информацию, нажмите кнопку "Искать"</p>
+    <img src="{{ url_for('static', filename='images/how_search.png') }}" alt="Поиск" class="img-fluid">
+    <h5>Другие вопросы, жалобы, предложения можно озвучить автору в личных сообщениях(Телеграмм:@K_e_p_c_h_u_p)</h5>
+
+
+{% endblock %}

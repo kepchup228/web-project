@@ -9,6 +9,8 @@ from data.photos import Photo
 from data.tags import Tag
 from data.users import User
 from data import db_session
+from data.comments import Comment
+
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -161,21 +163,31 @@ def search():
         return redirect(url_for('index'))
 
     db_sess = db_session.create_session()
-
     search_terms = query.split()
+    filters = []
 
     if current_user.is_authenticated:
-        photos = db_sess.query(Photo).filter((Photo.user == current_user) | (Photo.is_private != True))
+        filters.append((Photo.user == current_user) | (Photo.is_private != True))
     else:
-        photos = db_sess.query(Photo).filter(Photo.is_private != True)
+        filters.append(Photo.is_private != True)
 
+    # Добавляем условия для каждого термина
     for term in search_terms:
-        photos = photos.filter((Photo.title.contains(term)), (Photo.description.contains(term)),
-                               (Photo.tags.any(Tag.name.contains(term))))
+        filters.append(
+            (Photo.title.contains(term)) |
+            (Photo.description.contains(term)) |
+            (Photo.tags.any(Tag.name.contains(term)))
+        )
 
-        photos = photos.order_by(Photo.created_date.desc()).all()
-    return render_template('index.html', photos=photos, search_query=query)
+    # Основные результаты поиска
+    photos = db_sess.query(Photo).filter(*filters).order_by(Photo.created_date.desc()).all()
 
+    # Получаем другие фотографии, исключая найденные
+    other_photos = db_sess.query(Photo).filter(
+        ~Photo.id.in_([photo.id for photo in photos])
+    ).order_by(Photo.created_date.desc()).limit(5).all()
+
+    return render_template('index.html', photos=photos, other_photos=other_photos, search_query=query)
 
 @app.route("/")
 def index():
@@ -187,6 +199,9 @@ def index():
     photos = photos.order_by(Photo.created_date.desc()).all()
     return render_template("index.html", photos=photos)
 
+@app.route('/help')
+def help():
+    return render_template('help.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -216,6 +231,33 @@ def my_photos():
     db_sess = db_session.create_session()
     photos = db_sess.query(Photo).filter(Photo.user == current_user).all()
     return render_template('my_photos.html', photos=photos)
+
+@app.route('/add_comment/<int:photo_id>', methods=['POST'])
+@login_required
+def add_comment(photo_id):
+    db_sess = db_session.create_session()
+    photo = db_sess.query(Photo).get(photo_id)
+    if not photo:
+        abort(404)
+
+    content = request.form.get('content')
+    if content:
+        comment = Comment(photo_id=photo_id, user_id=current_user.id, content=content)
+        db_sess.add(comment)
+        db_sess.commit()
+
+    return redirect(url_for('photo_detail', photo_id=photo_id))
+
+@app.route('/photo/<int:photo_id>')
+def photo_detail(photo_id):
+    db_sess = db_session.create_session()
+    photo = db_sess.query(Photo).get(photo_id)
+    if not photo:
+        abort(404)
+
+    comments = db_sess.query(Comment).filter(Comment.photo_id == photo_id).all()
+    return render_template('photo_detail.html', photo=photo, comments=comments)
+
 
 @app.route('/api/tags')
 def api_tags():

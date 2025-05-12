@@ -210,6 +210,12 @@ def register():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+@app.route('/my_photos')
+@login_required
+def my_photos():
+    db_sess = db_session.create_session()
+    photos = db_sess.query(Photo).filter(Photo.user == current_user).all()
+    return render_template('my_photos.html', photos=photos)
 
 @app.route('/api/tags')
 def api_tags():

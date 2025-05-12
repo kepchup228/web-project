@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Мои фотографии</h1>
+    {% if photos %}
+        <div class="row">
+            {% for photo in photos %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" class="card-img-top" alt="{{ photo.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ photo.title }}</h5>
+                            <p class="card-text">{{ photo.description }}</p>
+                            <div class="mb-2">
+                                {% for tag in photo.tags %}
+                                    <span class="badge badge-primary">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="text-muted small">
+                                Дата: {{ photo.created_date.strftime('%d.%m.%Y') }}
+                            </div>
+                            <div class="mt-2">
+                                <a href="/edit_photo/{{ photo.id }}" class="btn btn-warning btn-sm">Изменить</a>
+                                <a href="/delete_photo/{{ photo.id }}" class="btn btn-danger btn-sm">Удалить</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">У вас нет загруженных фотографий.</div>
+    {% endif %}
+{% endblock %}

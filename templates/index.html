@@ -1,120 +1,122 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Фотогалерея</h1>
-    {% if current_user.is_authenticated %}
-        <a href="add_photo" class="btn btn-secondary">Добавить фото</a>
-    {% endif %}
+<h1>Фотогалерея</h1>
+{% if current_user.is_authenticated %}
+<a href="add_photo" class="btn btn-secondary">Добавить фото</a>
+{% endif %}
 
-    <form class="form-inline my-3" action="{{ url_for('search') }}" method="get">
-        <div class="input-group w-100">
-            <input class="form-control" type="text" name="q" placeholder="Поиск по тегам, названию или описанию..."
-                   id="search-input" value="{{ search_query if search_query }}">
-            <div class="input-group-append">
-                <button class="btn btn-outline-success" type="submit">Искать</button>
-            </div>
+<form class="form-inline my-3" action="{{ url_for('search') }}" method="get">
+    <div class="input-group w-100">
+        <input class="form-control" type="text" name="q" placeholder="Поиск по тегам, названию или описанию..."
+               id="search-input" value="{{ search_query if search_query }}">
+        <div class="input-group-append">
+            <button class="btn btn-outline-success" type="submit">Искать</button>
         </div>
-        <small class="form-text text-muted">Можно искать по нескольким тегам через пробел</small>
-    </form>
-
-    {% if search_query %}
-        <div class="alert alert-info mb-3">
-            Результаты поиска по запросу: "{{ search_query }}"
-            <a href="/" class="close">&times;</a>
-        </div>
-    {% endif %}
-
-    <div class="row">
-        {% for photo in photos %}
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" class="card-img-top" alt="{{ photo.title }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ photo.title }}</h5>
-                        <p class="card-text">{{ photo.description }}</p>
-                        <div class="mb-2">
-                            {% for tag in photo.tags %}
-                                <span class="badge badge-primary">{{ tag.name }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="text-muted small">
-                            Автор: {{ photo.user.name }}, Дата: {{ photo.created_date.strftime('%d.%m.%Y') }}
-                        </div>
-                        {% if current_user.is_authenticated and current_user == photo.user %}
-                            <div class="mt-2">
-                                <a href="/edit_photo/{{ photo.id }}" class="btn btn-warning btn-sm">Изменить</a>
-                                <a href="/delete_photo/{{ photo.id }}" class="btn btn-danger btn-sm">Удалить</a>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <div class="col-12">
-                <div class="alert alert-warning">
-                    {% if search_query %}Ничего не найдено{% else %}Нет фотографий для отображения{% endif %}
-                </div>
-            </div>
-        {% endfor %}
     </div>
+    <small class="form-text text-muted">Можно искать по нескольким тегам через пробел</small>
+</form>
 
-    {% if other_photos %}
-        <h2>А также посмотрите другие фотографии:</h2>
-        <div class="row">
-            {% for photo in other_photos %}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" class="card-img-top" alt="{{ photo.title }}">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ photo.title }}</h5>
-                        </div>
-                    </div>
+{% if search_query %}
+<div class="alert alert-info mb-3">
+    Результаты поиска по запросу: "{{ search_query }}"
+    <a href="/" class="close">&times;</a>
+</div>
+{% endif %}
+
+<div class="row">
+    {% for photo in photos %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" class="card-img-top"
+                 alt="{{ photo.title }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ photo.title }}</h5>
+                <p class="card-text">{{ photo.description }}</p>
+                <div class="mb-2">
+                    {% for tag in photo.tags %}
+                    <span class="badge badge-primary">{{ tag.name }}</span>
+                    {% endfor %}
                 </div>
-            {% endfor %}
+                <div class="text-muted small">
+                    Автор: {{ photo.user.name }}, Дата: {{ photo.created_date.strftime('%d.%m.%Y') }}
+                </div>
+                {% if current_user.is_authenticated and current_user == photo.user %}
+                <div class="mt-2">
+                    <a href="/edit_photo/{{ photo.id }}" class="btn btn-warning btn-sm">Изменить</a>
+                    <a href="/delete_photo/{{ photo.id }}" class="btn btn-danger btn-sm">Удалить</a>
+                </div>
+                {% endif %}
+            </div>
         </div>
-    {% endif %}
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-warning">
+            {% if search_query %}Ничего не найдено{% else %}Нет фотографий для отображения{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if other_photos %}
+<h2>А также посмотрите другие фотографии:</h2>
+<div class="row">
+    {% for photo in other_photos %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" class="card-img-top"
+                 alt="{{ photo.title }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ photo.title }}</h5>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#search-input').select2({
-                tags: true,
-                tokenSeparators: [',', ' '],
-                createTag: function(params) {
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#search-input').select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            createTag: function(params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newTag: true
+                }
+            },
+            ajax: {
+                url: '/api/tags',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
                     return {
-                        id: params.term,
-                        text: params.term,
-                        newTag: true
-                    }
+                        q: params.term
+                    };
                 },
-                ajax: {
-                    url: '/api/tags',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.tags.map(function(tag) {
-                                return {
-                                    id: tag,
-                                    text: tag
-                                };
-                            })
-                        };
-                    },
-                    cache: true
+                processResults: function(data) {
+                    return {
+                        results: data.tags.map(function(tag) {
+                            return {
+                                id: tag,
+                                text: tag
+                            };
+                        })
+                    };
                 },
-                placeholder: 'Поиск по тегам, названию или описанию...',
-                minimumInputLength: 1
-            });
+                cache: true
+            },
+            placeholder: 'Поиск по тегам, названию или описанию...',
+            minimumInputLength: 1
         });
-    </script>
+    });
+</script>
 {% endblock %}

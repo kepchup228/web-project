@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>{{ photo.title }}</h1>
-    <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.title }}">
-    <p>{{ photo.description }}</p>
-    <h3>Комментарии</h3>
-    <form action="/add_comment/{{ photo.id }}" method="post">
-        <textarea name="content" rows="3" required></textarea>
-        <button type="submit" class="btn btn-primary">Добавить комментарий</button>
-    </form>
-    <ul class="list-group mt-3">
-        {% for comment in comments %}
-            <li class="list-group-item">
-                <strong>{{ comment.user.name }}:</strong> {{ comment.content }}
-            </li>
-        {% endfor %}
-    </ul>
+<h1>{{ photo.title }}</h1>
+<img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.title }}">
+<p>{{ photo.description }}</p>
+<h3>Комментарии</h3>
+<form action="/add_comment/{{ photo.id }}" method="post">
+    <textarea name="content" rows="3" required></textarea>
+    <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+</form>
+<ul class="list-group mt-3">
+    {% for comment in comments %}
+    <li class="list-group-item">
+        <strong>{{ comment.user.name }}:</strong> {{ comment.content }}
+    </li>
+    {% endfor %}
+</ul>
 {% endblock %}

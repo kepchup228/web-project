@@ -3,6 +3,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 import os
 from werkzeug.utils import secure_filename
 
+from data.db_session import create_session
 from forms.photo import PhotoForm
 from forms.user import RegisterForm, LoginForm
 from data.photos import Photo
@@ -171,7 +172,6 @@ def search():
     else:
         filters.append(Photo.is_private != True)
 
-    # Добавляем условия для каждого термина
     for term in search_terms:
         filters.append(
             (Photo.title.contains(term)) |
@@ -179,10 +179,7 @@ def search():
             (Photo.tags.any(Tag.name.contains(term)))
         )
 
-    # Основные результаты поиска
     photos = db_sess.query(Photo).filter(*filters).order_by(Photo.created_date.desc()).all()
-
-    # Получаем другие фотографии, исключая найденные
     other_photos = db_sess.query(Photo).filter(
         ~Photo.id.in_([photo.id for photo in photos])
     ).order_by(Photo.created_date.desc()).limit(5).all()

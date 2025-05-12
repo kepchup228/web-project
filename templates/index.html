@@ -7,9 +7,22 @@
     {% endif %}
 
     <form class="form-inline my-3" action="{{ url_for('search') }}" method="get">
-        <input class="form-control mr-2" type="text" name="q" placeholder="Поиск по тегам">
-        <button class="btn btn-outline-success" type="submit">Искать</button>
+        <div class="input-group w-100">
+            <input class="form-control" type="text" name="q" placeholder="Поиск по тегам, названию или описанию..."
+                   id="search-input" value="{{ search_query if search_query }}">
+            <div class="input-group-append">
+                <button class="btn btn-outline-success" type="submit">Искать</button>
+            </div>
+        </div>
+        <small class="form-text text-muted">Можно искать по нескольким тегам через пробел</small>
     </form>
+
+    {% if search_query %}
+        <div class="alert alert-info mb-3">
+            Результаты поиска по запросу: "{{ search_query }}"
+            <a href="/" class="close">&times;</a>
+        </div>
+    {% endif %}
 
     <div class="row">
         {% for photo in photos %}
@@ -36,6 +49,56 @@
                     </div>
                 </div>
             </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    {% if search_query %}Ничего не найдено{% else %}Нет фотографий для отображения{% endif %}
+                </div>
+            </div>
         {% endfor %}
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#search-input').select2({
+                tags: true,
+                tokenSeparators: [',', ' '],
+                createTag: function(params) {
+                    return {
+                        id: params.term,
+                        text: params.term,
+                        newTag: true
+                    }
+                },
+                ajax: {
+                    url: '/api/tags',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.tags.map(function(tag) {
+                                return {
+                                    id: tag,
+                                    text: tag
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Поиск по тегам, названию или описанию...',
+                minimumInputLength: 1
+            });
+        });
+    </script>
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, abort, url_for
+from flask import Flask, render_template, redirect, request, abort, url_for, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 import os
 from werkzeug.utils import secure_filename
@@ -161,14 +161,19 @@ def search():
         return redirect(url_for('index'))
 
     db_sess = db_session.create_session()
-    photos = db_sess.query(Photo).join(Photo.tags).filter(Tag.name.contains(query))
 
-    if not current_user.is_authenticated:
-        photos = photos.filter(Photo.is_private != True)
-    elif current_user.is_authenticated:
-        photos = photos.filter((Photo.user == current_user) | (Photo.is_private != True))
+    search_terms = query.split()
 
-    photos = photos.all()
+    if current_user.is_authenticated:
+        photos = db_sess.query(Photo).filter((Photo.user == current_user) | (Photo.is_private != True))
+    else:
+        photos = db_sess.query(Photo).filter(Photo.is_private != True)
+
+    for term in search_terms:
+        photos = photos.filter((Photo.title.contains(term)), (Photo.description.contains(term)),
+                               (Photo.tags.any(Tag.name.contains(term))))
+
+        photos = photos.order_by(Photo.created_date.desc()).all()
     return render_template('index.html', photos=photos, search_query=query)
 
 
@@ -204,6 +209,16 @@ def register():
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
+
+
+@app.route('/api/tags')
+def api_tags():
+    query = request.args.get('q', '').strip().lower()
+    db_sess = db_session.create_session()
+    tags = db_sess.query(Tag).filter(Tag.name.contains(query)).limit(10).all()
+    return jsonify({
+        'tags': [tag.name for tag in tags]
+    })
 
 
 @app.route('/login', methods=['GET', 'POST'])

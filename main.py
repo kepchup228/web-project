@@ -20,24 +20,24 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png'}
 
-
+# Для загрузки пользователей
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
 
-
+# Для выхолда из системы
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect("/")
 
-
+# Для добавления фотографий
 @app.route('/add_photo', methods=['GET', 'POST'])
 @login_required
 def add_photo():
-    form = PhotoForm()
+    form = PhotoForm() # Форма для фото
     if form.validate_on_submit():
         db_sess = db_session.create_session()
 
@@ -74,6 +74,7 @@ def add_photo():
                 db_sess.commit()
                 return redirect('/')
             else:
+                # Если не тот формат
                 return render_template('photo.html',
                                        title='Добавление фотографии',
                                        form=form,
@@ -82,7 +83,7 @@ def add_photo():
             db_sess.close()
     return render_template('photo.html', title='Добавление фотографии', form=form)
 
-
+# Проверка разрешенных расширений
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -96,6 +97,7 @@ def edit_photo(id):
         db_sess = db_session.create_session()
         photo = db_sess.query(Photo).filter(Photo.id == id, Photo.user == current_user).first()
         if photo:
+            # Заполняем текущими данными
             form.title.data = photo.title
             form.description.data = photo.description
             form.tags.data = ', '.join([tag.name for tag in photo.tags])
@@ -111,7 +113,7 @@ def edit_photo(id):
             photo.description = form.description.data
             photo.is_private = form.is_private.data
 
-            photo.tags = []
+            photo.tags = [] # Очищаем старые теги
             tags = [t.strip() for t in form.tags.data.split(',') if t.strip()]
             for tag_name in tags:
                 tag = db_sess.query(Tag).filter(Tag.name == tag_name.lower()).first()
@@ -120,6 +122,7 @@ def edit_photo(id):
                     db_sess.add(tag)
                 photo.tags.append(tag)
 
+            # Если загружен новый файл
             file = form.photo.data
             if file and allowed_file(file.filename):
                 try:
@@ -127,6 +130,7 @@ def edit_photo(id):
                 except:
                     pass
 
+                # Сохраняем новый файл
                 filename = secure_filename(file.filename)
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
@@ -143,6 +147,7 @@ def edit_photo(id):
 @login_required
 def delete_photo(id):
     db_sess = db_session.create_session()
+    # Ищем принадлежащее текущему пользователю
     photo = db_sess.query(Photo).filter(Photo.id == id, Photo.user == current_user).first()
     if photo:
         try:
@@ -159,14 +164,15 @@ def delete_photo(id):
 
 @app.route('/search')
 def search():
-    query = request.args.get('q', '').strip().lower()
+    query = request.args.get('q', '').strip().lower() # Поисковой запрос
     if not query:
-        return redirect(url_for('index'))
+        return redirect(url_for('index')) # Если пустой, то на главную
 
     db_sess = db_session.create_session()
     search_terms = query.split()
     filters = []
 
+    # Фильтры по приватности
     if current_user.is_authenticated:
         filters.append((Photo.user == current_user) | (Photo.is_private != True))
     else:
@@ -180,6 +186,7 @@ def search():
         )
 
     photos = db_sess.query(Photo).filter(*filters).order_by(Photo.created_date.desc()).all()
+    # Доп фото, другие
     other_photos = db_sess.query(Photo).filter(
         ~Photo.id.in_([photo.id for photo in photos])
     ).order_by(Photo.created_date.desc()).limit(5).all()
@@ -190,9 +197,11 @@ def search():
 def index():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
+        # Авторизованные пользователи видят свои и публичные фото
         photos = db_sess.query(Photo).filter((Photo.user == current_user) | (Photo.is_private != True))
     else:
         photos = db_sess.query(Photo).filter(Photo.is_private != True)
+    # Сортируем по дате создания (новые сначала)
     photos = photos.order_by(Photo.created_date.desc()).all()
     return render_template("index.html", photos=photos)
 
@@ -211,17 +220,19 @@ def register():
         if db_sess.query(User).filter(User.email == form.email.data).first():
             return render_template('register.html', title='Регистрация', form=form,
                                    message="Такой пользователь уже есть")
+        # Создаем нового пользователя
         user = User(
             name=form.name.data,
             email=form.email.data,
             about=form.about.data
         )
-        user.set_password(form.password.data)
+        user.set_password(form.password.data) # Хешируем пароль
         db_sess.add(user)
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+# Страница с фотографиями текущего пользователя
 @app.route('/my_photos')
 @login_required
 def my_photos():
@@ -229,6 +240,7 @@ def my_photos():
     photos = db_sess.query(Photo).filter(Photo.user == current_user).all()
     return render_template('my_photos.html', photos=photos)
 
+# Комментарии, но надо доделать
 @app.route('/add_comment/<int:photo_id>', methods=['POST'])
 @login_required
 def add_comment(photo_id):
@@ -245,6 +257,7 @@ def add_comment(photo_id):
 
     return redirect(url_for('photo_detail', photo_id=photo_id))
 
+# Для комментариев
 @app.route('/photo/<int:photo_id>')
 def photo_detail(photo_id):
     db_sess = db_session.create_session()
@@ -256,6 +269,7 @@ def photo_detail(photo_id):
     return render_template('photo_detail.html', photo=photo, comments=comments)
 
 
+# для автодополнения тего
 @app.route('/api/tags')
 def api_tags():
     query = request.args.get('q', '').strip().lower()
@@ -281,6 +295,7 @@ def login():
 
 def main():
     db_session.global_init("db/blogs.db")
+    # Создаем папку для загрузок, если ее нет
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     app.run(debug=True)
